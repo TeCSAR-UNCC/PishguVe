@@ -180,7 +180,7 @@ else:
             ade_batches.append(torch.sum(ut.displacement_error(pred_traj_real, pred_traj_gt, mode='raw')).detach().item())
             fde_batches.append(torch.sum(ut.final_displacement_error(pred_traj_real[:,-1,:], pred_traj_gt[:,:,-1,:].squeeze(1), mode='raw')).detach().item())
 
-            try_rmse_batch += (ut.rmse(pred_traj_real, pred_traj_gt, mode='raw'))#.detach().item()
+            try_rmse_batch += (ut.rmse(pred_traj_real, pred_traj_gt, mode='raw'))
             try_i+=1
 
             ops, params = 0,0
