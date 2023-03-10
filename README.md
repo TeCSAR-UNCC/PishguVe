@@ -1,4 +1,4 @@
-# PishguVe: Attention-utilizing graph isomorphism and CNN based vehicle trajectory prediction architecture
+# PishguVe: Attention-utilizing Graph Isomorphism and CNN based Vehicle Trajectory Prediction Architecture
 
 
 This repository contains official Pytorch impleoemntaion of PishguVe, a novel lightweight vehicle trajectory prediction deep learning architecture that uses attention-based graph isomorphism and convolutional neural networks. 
