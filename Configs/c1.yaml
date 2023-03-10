@@ -1,0 +1,19 @@
+input_data:
+  data_path : "./Trajectory_Datasets/"
+  dataset : ['Carolinas_highAngle']
+  train_folder: 'train'
+  val_folder: 'val'
+  test_folder: 'test'
+
+training:
+  save_model : True
+  train : True
+  save_folder : 'train1'
+  learning_rate : 0.01
+  epoches : 80
+  device : 'cuda:0'
+  weight_decay : 0.0005
+  model_dir : '/home/galinezh/PishguVe/models/Carolinas_highAngle_PishguVe_HighAngle4_Epoch_Cdr_04_Ldr_002_46.pt'
+  batch_size : 64
+  
+

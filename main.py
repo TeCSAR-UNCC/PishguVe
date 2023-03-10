@@ -19,13 +19,23 @@ from statistics import mean
 from thop import profile
 from torch_geometric.data.batch import Batch as tgb
 import numpy as np
-
+import argparse
+import yaml
 import utils.loader as dl
 import utils.network as net
 import utils.util as ut
 from tqdm import tqdm
 
-data_files = ["Carolinas_eyelevel", "NGSIM", "Carolinas_highangle"]
+def parse_args():
+    parser = argparse.ArgumentParser(description='Training and validation parameters.')
+    parser.add_argument('--config', help='config file path')
+    args = parser.parse_args()
+    return args
+
+args = parse_args()
+with open(args.config, "r") as file:
+    config = yaml.safe_load(file)
+    
 
 input_data_sec = 3
 output_horizon_sec = 5
@@ -45,8 +55,6 @@ output_size = NUM_POINTS_PER_POS*PRED_STEP
 num_features = NUM_POINTS_PER_POS*OBS_STEP
 
 try_num_veh = 0
-
-folder_dir = "./Trajectory_Datasets/"
 
 def horiz_eval(loss_total, n_horiz):
     loss_total = loss_total.cpu().numpy()
@@ -70,38 +78,37 @@ def horiz_eval(loss_total, n_horiz):
 
 
 
-if TRAIN==True:
-    saveFolder = 'train0' # folder name where models will be saved
-    lr = 0.01
-    EPOCHS=300
-    print("Train file: " + data_files[0])
-    print("Training:")   
+if config['training']['train']:
+    saveFolder = config['training']['save_folder'] 
+    lr = config['training']['learning_rate']
+    folder_dir = config['input_data']['data_path']
 
-
-    for test_file in tqdm(data_files):
+    for test_file in tqdm(config['input_data']['dataset']):
+        print("Train file: " + test_file)
+        print("Training:") 
         
-        if SAVE_MODEL==True:
+        if config['training']['save_model']:
             if not os.path.exists("models/"+str(saveFolder)+"/"):
                     os.makedirs("models/"+str(saveFolder)+"/")
 
         # GPU is set here
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        device = torch.device(config['training']['device'] if torch.cuda.is_available() else 'cpu')
         model = net.NetGINConv(num_features, output_size).to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=5e-4)
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=config['training']['weight_decay'])
 
         data_dir = folder_dir+test_file+'/'
         
 
-        data_folders = ['test','train', 'val']
-    
-        _, train_loader = dl.data_loader(data_dir+data_folders[1])
-        _, val_loader = dl.data_loader(data_dir+data_folders[2])
-        
+        _, train_loader = dl.data_loader(data_dir+config['input_data']['train_folder'], 
+                                        batch_size=config['training']['batch_size'])
+
+        _, val_loader = dl.data_loader(data_dir+config['input_data']['val_folder'], 
+                                        batch_size=config['training']['batch_size'])
 
         best_info = [1000.0, 1000.0, 0]
 
        
-        for epoch in tqdm(range(0, EPOCHS)):
+        for epoch in tqdm(range(0, config['training']['epoches'])):
             
             # Training
             losses = ut.train(model, train_loader, optimizer, device, obs_step=OBS_STEP)
@@ -113,8 +120,7 @@ if TRAIN==True:
                 best_info[1] = fde
                 best_info[2] = epoch
                 print("ADE: " + str(ade) + "  FDE: " + str(fde) + "   Epoch: " + str(epoch))
-                if (SAVE_MODEL==True):
-                 
+                if (config['training']['save_model']):
                     model_path = "./models/"+str(saveFolder)+"/"+ test_file+"_PishguVe"+  ".pt"
                     torch.save(model.state_dict(), model_path)
                 # print("ADE: " + str(ade) + "  FDE: " + str(fde) + "   Epoch: " + str(epoch))
@@ -126,29 +132,26 @@ else:
     all_ops = []
     times = []
 
-    epoch_no = 60
-
-    for test_file in tqdm(data_files):
-        saveFolder = 'train0'
+    for test_file in tqdm(config['input_data']['dataset']):
         total_traj = 0
-        
-        device = torch.device('cpu')
+        folder_dir = config['input_data']['data_path']
+        device = torch.device(config['training']['device'] if torch.cuda.is_available() else 'cpu')
         model = net.NetGINConv(num_features, output_size).to(device)
 
         # model path
         model_folder = './models/'
         
-        model.load_state_dict(torch.load(model_folder+str(saveFolder)+"/" + test_file + "_PishguVe" + ".pt", map_location='cpu'))
+        model.load_state_dict(torch.load(config['training']['model_dir'], map_location='cpu'))
         
         data_dir = folder_dir+test_file+'/'
 
-        data_folders = ['test','train', 'val']
-
-        _, test_loader = dl.data_loader(data_dir+data_folders[0], batch_size=1)
+        _, test_loader = dl.data_loader(data_dir+config['input_data']['test_folder'], 
+                                            batch_size=1)
 
         ade_batches, fde_batches = [], []
         try_rmse_batch = torch.full((25,1), 0.0)
         try_rmse_batch = try_rmse_batch.squeeze(dim=1)
+        try_rmse_batch = try_rmse_batch.to(device)
 
         try_i = 0
 
@@ -167,7 +170,6 @@ else:
             end = time.time()
             times.append(end-start)
 
-            # pred_traj = pred_traj.reshape(pred_traj.shape[0],12,2).detach()
             pred_traj = pred_traj.reshape(pred_traj.shape[0],25,2).detach()
 
             x_try = pred_traj.shape
