@@ -28,7 +28,7 @@ python3 main.py --config {path_to_the_config_file}
 
 ## Citation
 
-If you find our work helpful, please cite the following papers
+If you find our work helpful, please cite the following papers:
 
 ```
 @article{katariya2023pov,
