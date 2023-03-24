@@ -25,3 +25,23 @@ For testing, just give the path to desired model in the config file and set "sav
 ```
 python3 main.py --config {path_to_the_config_file}
 ```
+
+## Citation
+
+If you find our work helpful, please cite the following papers
+
+```
+@article{katariya2023pov,
+  title={A POV-based Highway Vehicle Trajectory Dataset and Prediction Architecture},
+  author={Katariya, Vinit and Noghre, Ghazal Alinezhad and Pazho, Armin Danesh and Tabkhi, Hamed},
+  journal={arXiv preprint arXiv:2303.06202},
+  year={2023}
+}
+
+@article{noghre2022pishgu,
+  title={Pishgu: Universal Path Prediction Architecture through Graph Isomorphism and Attentive Convolution},
+  author={Noghre, Ghazal Alinezhad and Katariya, Vinit and Pazho, Armin Danesh and Neff, Christopher and Tabkhi, Hamed},
+  journal={arXiv preprint arXiv:2210.08057},
+  year={2022}
+}
+```
